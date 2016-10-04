@@ -4,7 +4,8 @@
 //
 //  Created by Zach Zeleznick on 9/20/16.
 //  Copyright © 2016 zzeleznick. All rights reserved.
-//
+// 
+//Need to fix scientific notation feature
 
 import UIKit
 
@@ -21,7 +22,10 @@ class ViewController: UIViewController {
     
     // TODO: This looks like a good place to add some data structures.
     //       One data structure is initialized below for reference.
-    var someDataStructure: [String] = [""]
+    var userEnteringNumber :Bool = false
+    var currValue = "0"
+    var prevValue = ""
+    var prevOperation:String = ""
     
 
     override func viewDidLoad() {
@@ -52,7 +56,26 @@ class ViewController: UIViewController {
     // TODO: Ensure that resultLabel gets updated.
     //       Modify this one or create your own.
     func updateResultLabel(_ content: String) {
-        print("Update me like one of those PCs")
+        currValue = content
+        if ([Character](content.characters).count <= 7) {
+            currValue = content
+            resultLabel.text! = content
+            
+        } else {
+            let seven = content.substring(to: content.index(content.startIndex, offsetBy: 7))
+            currValue = seven
+            resultLabel.text! = seven
+
+            /*if (!currValue.characters.contains(".")) {
+                let length = content.characters.count - 5
+                let five = content.substring(to: content.index(content.startIndex, offsetBy: 5))
+                resultLabel.text! = five + "e" + String(length) // have to change it to look like scientific notation
+            }
+            else {
+                let seven = content.substring(to: content.index(content.startIndex, offsetBy: 7))
+                resultLabel.text! = seven
+            }*/
+        }
     }
     
     
@@ -73,6 +96,7 @@ class ViewController: UIViewController {
     //       Modify this one or create your own.
     func calculate(a: String, b:String, operation: String) -> Double {
         print("Calculation requested for \(a) \(operation) \(b)")
+        //return Double(a) Double(operation) Double(b)
         return 0.0
     }
     
@@ -80,17 +104,142 @@ class ViewController: UIViewController {
     func numberPressed(_ sender: CustomButton) {
         guard Int(sender.content) != nil else { return }
         print("The number \(sender.content) was pressed")
-        // Fill me in!
+        let digit: String = (sender.content)
+
+        if(currValue == "0" || userEnteringNumber == false) {
+            updateResultLabel(digit)
+        } else if (currValue == "-0") {
+            updateResultLabel("-" + digit)
+        } else {
+            updateResultLabel(currValue + digit)
+        }
+        userEnteringNumber = true
     }
     
     // REQUIRED: The responder to an operator button being pressed.
     func operatorPressed(_ sender: CustomButton) {
         // Fill me in!
+        
+        let operationSelected = (sender.content)
+        if (operationSelected == "+/-") {
+            if(currValue[currValue.startIndex] == "-") {
+                currValue.remove(at: currValue.startIndex);
+                updateResultLabel(currValue)
+            } else {
+                updateResultLabel("-" + currValue)
+            }
+        } else if (operationSelected == "C") {
+            updateResultLabel("0")
+            prevOperation = ""
+            prevValue = ""
+            userEnteringNumber = false
+        } else if (operationSelected == "%") {
+            let result = Double(currValue)! * 0.01
+            updateResultLabel(String(result))
+        } else if (operationSelected == "=") {
+            equate()
+            prevOperation = ""
+        } else if (operationSelected == "+") {
+            if (prevOperation != "" && prevValue != "") {
+                equate()
+            }
+            prevValue = currValue
+            currValue = "0"
+            prevOperation = operationSelected
+        } else if (operationSelected == "-") {
+            if (prevOperation != "" && prevValue != "") {
+                equate()
+            }
+            prevValue = currValue
+            currValue = "0"
+            prevOperation = operationSelected
+        } else if (operationSelected == "*") {
+            if (prevOperation != "" && prevValue != "") {
+                equate()
+            }
+            prevValue = currValue
+            currValue = "0"
+            prevOperation = operationSelected
+        } else if (operationSelected == "/") {
+            if (prevOperation != "" && prevValue != "") {
+                equate()
+            }
+            prevValue = currValue
+            currValue = "0"
+            prevOperation = operationSelected
+        }
+        
+        userEnteringNumber = false
+        
     }
+    
+    @IBAction func equate() {
+        self.userEnteringNumber = false
+        self.performOperation(prevOperation)
+    }
+    
+    
+    func performOperation (_ operation:String) {
+        if (prevOperation == "") {
+            return
+        }
+        let a = Double(prevValue)!
+        let b = Double(currValue)!
+        
+        switch operation {
+            case "+":
+                truncateCheck(a + b)
+        case "-":
+            truncateCheck(a - b)
+        case "*":
+            truncateCheck(a * b)
+        case "/":
+            if (b == 0) {
+                print("Divide by 0 error")
+            } else {
+                truncateCheck(a / b)
+            }
+        default:
+            print("ERROR")
+        }
+    }
+    
+    func truncateCheck(_ result:Double) {
+        if (result.truncatingRemainder(dividingBy: 1) == 0) {
+            var digits = [Character](String(result).characters)
+            digits.remove(at: digits.count-1) //remove 0
+            digits.remove(at: digits.count-1) //remove decimal
+            updateResultLabel(String(digits)
+)
+        } else {
+            updateResultLabel(String(result))
+        }
+    }
+
     
     // REQUIRED: The responder to a number or operator button being pressed.
     func buttonPressed(_ sender: CustomButton) {
        // Fill me in!
+        let digit: String = (sender.content)
+        
+        if (userEnteringNumber == true) {
+            if (digit == ".") {
+                updateResultLabel(self.resultLabel.text! + ".")
+            }
+            else {
+                updateResultLabel(self.resultLabel.text! + (digit as String))
+            }
+        }
+        else {
+            if (digit == ".") {
+                updateResultLabel("0.")
+            }
+            else {
+                updateResultLabel(digit as String)
+            }
+            userEnteringNumber = true
+        }
+        
     }
     
     // IMPORTANT: Do NOT change any of the code below.
@@ -173,4 +322,3 @@ class ViewController: UIViewController {
     }
 
 }
-
